@@ -1,0 +1,89 @@
+# Hypasis Sync Protocol - Example Configuration
+
+chain:
+  name: polygon-pos
+  network: mainnet
+  chain_id: 137
+
+checkpoint:
+  source: mock  # Options: mock, ethereum-l1
+  contract: "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287"
+  interval: 256
+  timeout: 30s
+
+  # Ethereum L1 Connection (for ethereum-l1 source)
+  l1_rpc_url: ""  # Add your L1 RPC: https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
+  l1_chain_id: 1  # 1 for Ethereum mainnet, 11155111 for Sepolia
+  validator_rpc: ""  # Optional: Heimdall API URL for validator sets
+
+sync:
+  forward:
+    enabled: true
+    workers: 8
+    look_ahead: 10  # Pre-fetch 10 blocks ahead
+    validation_level: full  # Options: none, header, light, full
+
+  backward:
+    enabled: true
+    workers: 4
+    batch_size: 10000  # Download 10K blocks per batch
+    throttle: "50MB/s"  # Throttle to avoid impacting forward sync
+    validation_level: header  # Options: none, header, light, full (header recommended for performance)
+
+storage:
+  data_dir: /data/hypasis
+  cache_size: "2GB"  # PebbleDB cache size
+  write_buffer_size: "256MB"  # PebbleDB write buffer
+  max_open_files: 1024  # Max file descriptors
+  historical_depth: full  # Options: full, 1year, 90days, minimal
+  engine: pebble  # Options: memory, pebble, leveldb, badger
+
+p2p:
+  mode: rpc-server  # Options: rpc-server, devp2p
+
+  # RPC Server Mode (for Bor connectivity)
+  rpc_listen: "0.0.0.0:8545"
+
+  # Upstream RPC endpoints to fetch blocks from
+  upstream_rpcs:
+    - "https://polygon-rpc.com"
+    - "https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+  rpc_timeout: 30s
+  rpc_max_retries: 3
+
+  # Legacy P2P settings (for future devp2p mode)
+  listen: "0.0.0.0:30303"
+  bootnodes:
+    - "enode://..." # Add your bootnodes here
+  max_peers: 50
+  nat: true
+
+api:
+  rest:
+    enabled: true
+    listen: "0.0.0.0:8080"
+    cors: true
+    cors_origins:
+      - "*"  # Allow all origins (change for production)
+    rate_limit: 100  # Requests per second
+
+    tls:
+      enabled: false  # Set to true for production
+      cert_file: /etc/hypasis/tls/cert.pem
+      key_file: /etc/hypasis/tls/key.pem
+
+    auth:
+      enabled: false  # Set to true for production
+      jwt_secret: "change-this-secret-in-production"
+      token_ttl: "24h"  # Token validity period
+
+  metrics:
+    enabled: true
+    listen: "0.0.0.0:9090"
+    path: "/metrics"
+
+logging:
+  level: info  # Options: debug, info, warn, error
+  format: json  # Options: json, text
+  output: stdout  # Options: stdout, file
+  file: /var/log/hypasis/sync.log

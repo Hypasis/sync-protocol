@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  hypasis-sync:
+    image: hypasis/sync-protocol:latest
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: hypasis-sync
+    ports:
+      - "8080:8080"   # REST API
+      - "9090:9090"   # Metrics
+      - "30303:30303" # P2P
+    volumes:
+      - hypasis-data:/data/hypasis
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - CHAIN=polygon-mainnet
+      - DATA_DIR=/data/hypasis
+    command: ["--config=/app/config.yaml", "--data-dir=/data/hypasis"]
+    restart: unless-stopped
+    networks:
+      - hypasis-network
+
+  # Example: Polygon Bor node using Hypasis
+  bor:
+    image: maticnetwork/bor:latest
+    container_name: polygon-bor
+    depends_on:
+      - hypasis-sync
+    environment:
+      - SYNC_MODE=checkpoint
+      - SYNC_URL=http://hypasis-sync:8080
+    volumes:
+      - bor-data:/var/lib/bor
+    networks:
+      - hypasis-network
+
+volumes:
+  hypasis-data:
+    driver: local
+  bor-data:
+    driver: local
+
+networks:
+  hypasis-network:
+    driver: bridge
