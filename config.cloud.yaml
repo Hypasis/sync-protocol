@@ -1,0 +1,170 @@
+# Hypasis Sync Protocol - Cloud Production Configuration
+# This configuration is optimized for running 3-4 instances in a mesh cluster
+# supporting 1000+ node operators
+
+chain:
+  name: polygon-pos
+  network: mainnet
+  chain_id: 137
+
+# Cloud Instance Settings
+cloud:
+  instance_id: "hypasis-sync-1"  # Change for each instance (1, 2, 3, 4)
+  region: "us-east-1"             # AWS region or datacenter location
+  external_ip: "auto"             # Auto-detect or specify public IP
+
+# Cluster Coordination (Multi-Instance Mesh)
+cluster:
+  enabled: true
+  instance_id: "hypasis-sync-1"   # Must match cloud.instance_id
+  region: "us-east-1"
+  heartbeat_period: 10s
+  peer_timeout: 30s
+  enable_mesh_sync: true
+  leader_election: true
+
+  # Redis for cluster coordination
+  redis_url: "redis://cluster.hypasis.internal:6379"
+  redis_password: "${REDIS_PASSWORD}"  # From environment variable
+  redis_db: 0
+
+# Checkpoint Configuration
+checkpoint:
+  source: ethereum-l1
+  contract: "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287"
+  interval: 256
+  timeout: 30s
+
+  # Ethereum L1 Connection (REQUIRED for production)
+  l1_rpc_url: "${ETH_L1_RPC_URL}"  # From environment: Alchemy/Infura URL
+  l1_chain_id: 1
+  validator_rpc: ""
+
+# Sync Configuration
+sync:
+  forward:
+    enabled: true
+    workers: 16              # Increased for cloud
+    look_ahead: 20
+    validation_level: full   # Full validation for security
+
+  backward:
+    enabled: true
+    workers: 8
+    batch_size: 10000
+    throttle: "100MB/s"
+    validation_level: header
+
+# Storage Configuration
+storage:
+  data_dir: /data/hypasis
+  cache_size: "4GB"           # Increased for cloud
+  write_buffer_size: "512MB"  # Increased for cloud
+  max_open_files: 2048        # Increased for cloud
+  historical_depth: full
+  engine: pebble
+
+# Distributed Cache (Redis)
+cache:
+  enabled: true
+  type: redis
+  redis_url: "redis://cluster.hypasis.internal:6379"
+  redis_password: "${REDIS_PASSWORD}"
+  redis_db: 1  # Different DB from cluster coordination
+  ttl: 1h
+  max_size: "10GB"
+  pool_size: 100
+  min_idle_conn: 10
+
+# P2P Configuration - DUAL MODE
+p2p:
+  # DevP2P Mode (for Bor clients to connect as bootnodes)
+  mode: devp2p
+  listen: "0.0.0.0:30303"
+  external_ip: "auto"      # Will be auto-detected or use cloud.external_ip
+  max_peers: 500           # Each instance handles 500 Bor nodes
+  node_key: /data/hypasis/nodekey  # Persistent node key
+  network_id: 137
+  name: "Hypasis Sync Node v1.0"
+  enable_nat: true
+
+  # Bootnodes: Other Hypasis instances in the cluster
+  bootnodes:
+    - "enode://PUBKEY2@hypasis-sync-2.internal:30303"
+    - "enode://PUBKEY3@hypasis-sync-3.internal:30303"
+
+  # Static peers: Cluster mesh
+  static_peers:
+    - "enode://PUBKEY2@hypasis-sync-2.internal:30303"
+    - "enode://PUBKEY3@hypasis-sync-3.internal:30303"
+
+  # RPC Mode (legacy, still supported)
+  rpc_mode: true
+  rpc_listen: "0.0.0.0:8545"
+
+  # Upstream RPCs for fetching blocks
+  upstream_rpcs:
+    - "${POLYGON_RPC_1}"  # Primary Polygon RPC
+    - "${POLYGON_RPC_2}"  # Fallback Polygon RPC
+    - "https://polygon-rpc.com"
+  rpc_timeout: 30s
+  rpc_max_retries: 3
+
+# Connection Pool (for 1000+ concurrent operators)
+connection_pool:
+  max_connections: 500     # Per instance
+  cleanup_period: 5m
+
+# Rate Limiting (Fair Usage)
+ratelimit:
+  enabled: true
+  per_operator_rps: 100    # 100 requests/sec per node operator
+  global_rps: 50000        # 50k requests/sec per instance
+  burst: 200
+  cleanup_period: 5m
+
+# API Configuration
+api:
+  rest:
+    enabled: true
+    listen: "0.0.0.0:8080"
+    cors: true
+    cors_origins:
+      - "https://status.hypasis.io"
+      - "https://dashboard.hypasis.io"
+    rate_limit: 1000  # 1k requests/sec for API
+
+    tls:
+      enabled: true
+      cert_file: /etc/hypasis/tls/cert.pem
+      key_file: /etc/hypasis/tls/key.pem
+
+    auth:
+      enabled: true
+      jwt_secret: "${JWT_SECRET}"  # From environment
+      token_ttl: "24h"
+
+  metrics:
+    enabled: true
+    listen: "0.0.0.0:9090"
+    path: "/metrics"
+
+# Health Monitoring
+health:
+  enabled: true
+  check_interval: 10s
+  unhealthy_timeout: 30s
+  enable_auto_heal: true
+
+# Logging
+logging:
+  level: info
+  format: json
+  output: stdout
+
+# Security
+security:
+  enable_firewall: true
+  allowed_ips: []  # Empty = allow all, or specify IPs
+  ddos_protection: true
+  max_request_size: "10MB"
