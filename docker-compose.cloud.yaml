@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  # Redis for cluster coordination and distributed cache
+  redis:
+    image: redis:7-alpine
+    container_name: hypasis-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-hypasis-secret}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - hypasis-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Hypasis Sync Instance 1
+  hypasis-1:
+    build: .
+    container_name: hypasis-sync-1
+    environment:
+      - INSTANCE_ID=hypasis-sync-1
+      - REGION=us-east-1
+      - ETH_L1_RPC_URL=${ETH_L1_RPC_URL}
+      - POLYGON_RPC_1=${POLYGON_RPC_1}
+      - POLYGON_RPC_2=${POLYGON_RPC_2:-https://polygon-rpc.com}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-hypasis-secret}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret}
+    ports:
+      - "8080:8080"   # REST API
+      - "8545:8545"   # RPC
+      - "9090:9090"   # Metrics
+      - "30303:30303" # P2P TCP
+      - "30303:30303/udp" # P2P UDP
+    volumes:
+      - hypasis-1-data:/data/hypasis
+      - ./config.cloud.yaml:/app/config.yaml:ro
+    networks:
+      - hypasis-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Hypasis Sync Instance 2
+  hypasis-2:
+    build: .
+    container_name: hypasis-sync-2
+    environment:
+      - INSTANCE_ID=hypasis-sync-2
+      - REGION=us-west-2
+      - ETH_L1_RPC_URL=${ETH_L1_RPC_URL}
+      - POLYGON_RPC_1=${POLYGON_RPC_1}
+      - POLYGON_RPC_2=${POLYGON_RPC_2:-https://polygon-rpc.com}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-hypasis-secret}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret}
+    ports:
+      - "8081:8080"
+      - "8546:8545"
+      - "9091:9090"
+      - "30304:30303"
+      - "30304:30303/udp"
+    volumes:
+      - hypasis-2-data:/data/hypasis
+      - ./config.cloud.yaml:/app/config.yaml:ro
+    networks:
+      - hypasis-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Hypasis Sync Instance 3
+  hypasis-3:
+    build: .
+    container_name: hypasis-sync-3
+    environment:
+      - INSTANCE_ID=hypasis-sync-3
+      - REGION=eu-central-1
+      - ETH_L1_RPC_URL=${ETH_L1_RPC_URL}
+      - POLYGON_RPC_1=${POLYGON_RPC_1}
+      - POLYGON_RPC_2=${POLYGON_RPC_2:-https://polygon-rpc.com}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-hypasis-secret}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret}
+    ports:
+      - "8082:8080"
+      - "8547:8545"
+      - "9092:9090"
+      - "30305:30303"
+      - "30305:30303/udp"
+    volumes:
+      - hypasis-3-data:/data/hypasis
+      - ./config.cloud.yaml:/app/config.yaml:ro
+    networks:
+      - hypasis-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Nginx Load Balancer (optional, for testing)
+  nginx:
+    image: nginx:alpine
+    container_name: hypasis-loadbalancer
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployments/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deployments/nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - hypasis-network
+    depends_on:
+      - hypasis-1
+      - hypasis-2
+      - hypasis-3
+    restart: unless-stopped
+
+  # Prometheus (monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hypasis-prometheus
+    ports:
+      - "9099:9090"
+    volumes:
+      - ./deployments/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - hypasis-network
+    restart: unless-stopped
+
+  # Grafana (dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hypasis-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deployments/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./deployments/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - hypasis-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+networks:
+  hypasis-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  hypasis-1-data:
+  hypasis-2-data:
+  hypasis-3-data:
+  prometheus-data:
+  grafana-data:
