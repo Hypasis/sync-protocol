@@ -1,0 +1,9 @@
+# Gitleaks ignore file
+# Add fingerprints of false positives here
+# Format: <fingerprint>:<file>:<line>
+# To get fingerprints, run: gitleaks detect --report-path report.json
+# Then copy the fingerprint from the report
+
+# False positives - Ethereum constants and default configs
+internal/types/types.go:ethereum-private-key:120
+pkg/config/config.go:jwt-secret:199

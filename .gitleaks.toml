@@ -1,0 +1,94 @@
+# Gitleaks configuration for sync-protocol
+# See https://github.com/gitleaks/gitleaks#configuration
+
+title = "Gitleaks Configuration for Hypasis Sync Protocol"
+
+# Extend the default gitleaks config
+[extend]
+useDefault = true
+
+# Additional custom rules for blockchain/crypto projects
+[[rules]]
+id = "ethereum-private-key"
+description = "Ethereum Private Key"
+regex = '''(?i)(0x)?[a-f0-9]{64}'''
+tags = ["key", "ethereum"]
+[rules.allowlist]
+paths = [
+    '''.*_test\.go''',
+    '''examples/.*''',
+    '''docs/.*''',
+]
+
+[[rules]]
+id = "jwt-secret"
+description = "JWT Secret"
+regex = '''(?i)(jwt[_-]?secret|jwt[_-]?key)\s*[:=]\s*['"]?[a-zA-Z0-9_\-]{16,}['"]?'''
+tags = ["jwt", "secret"]
+[rules.allowlist]
+paths = [
+    '''.*\.example\..*''',
+    '''.*\.sample\..*''',
+    '''docker-compose\..*\.yaml''',
+]
+regexes = [
+    '''change-this-secret''',
+]
+
+[[rules]]
+id = "database-url"
+description = "Database Connection String"
+regex = '''(?i)(database[_-]?url|db[_-]?url|connection[_-]?string)\s*[:=]\s*['"]?[a-zA-Z0-9]+://[^'")\s]+['"]?'''
+tags = ["database", "connection"]
+[rules.allowlist]
+paths = [
+    '''.*\.example\..*''',
+    '''.*\.sample\..*''',
+]
+
+[[rules]]
+id = "redis-password"
+description = "Redis Password"
+regex = '''(?i)(redis[_-]?password|redis[_-]?auth)\s*[:=]\s*['"]?[a-zA-Z0-9_\-]{8,}['"]?'''
+tags = ["redis", "password"]
+[rules.allowlist]
+paths = [
+    '''.*\.example\..*''',
+    '''docker-compose\..*\.yaml''',
+]
+regexes = [
+    '''hypasis-secret''',
+]
+
+# Global allowlist
+[allowlist]
+description = "Global allowlist"
+paths = [
+    '''^\.git/''',
+    '''go\.sum$''',
+    '''go\.mod$''',
+    '''.*\.md$''',
+    '''\.pre-commit-.*''',
+    '''\.gitleaks.*''',
+    '''.*_test\.go$''',
+    '''.*\.example\..*''',
+    '''config\.example\.yaml''',
+    '''config\.cloud\.yaml''',
+    '''^\.env\.example$''',
+]
+regexes = [
+    '''(?i)example''',
+    '''(?i)test''',
+    '''(?i)sample''',
+]
+
+# Stopwords for generic secrets
+stopwords = [
+    "example",
+    "test",
+    "sample",
+    "dummy",
+    "placeholder",
+    "template",
+    "change-this",
+]
