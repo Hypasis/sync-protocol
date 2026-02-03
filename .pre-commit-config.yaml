@@ -40,8 +40,7 @@ repos:
       - id: go-mod-tidy-repo
 
       # Run golangci-lint (comprehensive Go linter - includes goimports)
-      # Note: This is set to warn-only mode (verbose: true)
+      # Note: This is set to warn-only mode
       - id: golangci-lint-repo-mod
-        verbose: true
         # Allow to pass even if issues are found (for now)
         args: [--issues-exit-code=0]
