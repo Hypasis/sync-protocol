@@ -14,15 +14,15 @@ import (
 
 // BlockFetcher fetches blocks from upstream RPC endpoints
 type BlockFetcher struct {
-	clients        []*ethclient.Client
-	endpoints      []string
-	currentIndex   int
-	timeout        time.Duration
-	maxRetries     int
-	mu             sync.RWMutex
-	healthStatus   map[string]bool
-	requestCount   map[string]uint64
-	errorCount     map[string]uint64
+	clients      []*ethclient.Client
+	endpoints    []string
+	currentIndex int
+	timeout      time.Duration
+	maxRetries   int
+	mu           sync.RWMutex
+	healthStatus map[string]bool
+	requestCount map[string]uint64
+	errorCount   map[string]uint64
 }
 
 // BlockFetcherConfig configures the block fetcher

@@ -49,7 +49,7 @@ func NewStorage(cfg *config.StorageConfig) (Storage, error) {
 	case "pebble", "pebbledb":
 		// Parse PebbleDB options from config
 		opts := &PebbleOptions{
-			CacheSize:       parseSizeString(cfg.CacheSize, 2*1024*1024*1024),       // default 2GB
+			CacheSize:       parseSizeString(cfg.CacheSize, 2*1024*1024*1024),         // default 2GB
 			WriteBufferSize: int(parseSizeString(cfg.WriteBufferSize, 256*1024*1024)), // default 256MB
 			MaxOpenFiles:    cfg.MaxOpenFiles,
 		}

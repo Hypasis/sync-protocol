@@ -10,36 +10,36 @@ import (
 
 // Coordinator manages coordination between multiple Hypasis instances in a cluster
 type Coordinator struct {
-	config      *CoordinatorConfig
-	cache       CacheInterface
-	instanceID  string
-	peers       map[string]*PeerInstance
-	peersMutex  sync.RWMutex
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
+	config     *CoordinatorConfig
+	cache      CacheInterface
+	instanceID string
+	peers      map[string]*PeerInstance
+	peersMutex sync.RWMutex
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
 }
 
 // CoordinatorConfig configures cluster coordination
 type CoordinatorConfig struct {
-	InstanceID       string        // Unique ID for this instance
-	Region           string        // AWS region or datacenter
-	HeartbeatPeriod  time.Duration // How often to send heartbeat
-	PeerTimeout      time.Duration // When to consider peer dead
-	EnableMeshSync   bool          // Enable block sync between instances
-	LeaderElection   bool          // Enable leader election
+	InstanceID      string        // Unique ID for this instance
+	Region          string        // AWS region or datacenter
+	HeartbeatPeriod time.Duration // How often to send heartbeat
+	PeerTimeout     time.Duration // When to consider peer dead
+	EnableMeshSync  bool          // Enable block sync between instances
+	LeaderElection  bool          // Enable leader election
 }
 
 // PeerInstance represents another Hypasis instance in the cluster
 type PeerInstance struct {
-	ID              string                 `json:"id"`
-	Region          string                 `json:"region"`
-	LastHeartbeat   time.Time              `json:"last_heartbeat"`
-	Status          string                 `json:"status"` // "healthy", "degraded", "offline"
-	Metrics         map[string]interface{} `json:"metrics"`
-	ConnectedPeers  int                    `json:"connected_peers"`
-	SyncProgress    float64                `json:"sync_progress"`
-	IsLeader        bool                   `json:"is_leader"`
+	ID             string                 `json:"id"`
+	Region         string                 `json:"region"`
+	LastHeartbeat  time.Time              `json:"last_heartbeat"`
+	Status         string                 `json:"status"` // "healthy", "degraded", "offline"
+	Metrics        map[string]interface{} `json:"metrics"`
+	ConnectedPeers int                    `json:"connected_peers"`
+	SyncProgress   float64                `json:"sync_progress"`
+	IsLeader       bool                   `json:"is_leader"`
 }
 
 // CacheInterface defines the cache methods needed for coordination
@@ -133,8 +133,8 @@ func (c *Coordinator) sendHeartbeat() {
 		"region":          c.config.Region,
 		"timestamp":       time.Now().Unix(),
 		"status":          "healthy", // TODO: Get from health monitor
-		"connected_peers": 0,          // TODO: Get from P2P server
-		"sync_progress":   99.9,       // TODO: Get from sync coordinator
+		"connected_peers": 0,         // TODO: Get from P2P server
+		"sync_progress":   99.9,      // TODO: Get from sync coordinator
 		"is_leader":       c.isLeader(),
 	}
 
@@ -385,13 +385,13 @@ func (c *Coordinator) GetClusterStatus() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"instance_id":            c.instanceID,
-		"region":                 c.config.Region,
-		"is_leader":              c.isLeader(),
-		"total_instances":        totalPeers + 1, // +1 for self
-		"healthy_instances":      healthyPeers,
+		"instance_id":             c.instanceID,
+		"region":                  c.config.Region,
+		"is_leader":               c.isLeader(),
+		"total_instances":         totalPeers + 1, // +1 for self
+		"healthy_instances":       healthyPeers,
 		"total_connected_clients": totalConnectedClients,
-		"peers":                  peerList,
+		"peers":                   peerList,
 	}
 }
 

@@ -32,11 +32,11 @@ type BlockRange struct {
 
 // SyncStatus represents the current synchronization status
 type SyncStatus struct {
-	ForwardSync  ForwardSyncStatus  `json:"forward_sync"`
-	BackwardSync BackwardSyncStatus `json:"backward_sync"`
-	ValidatorReady bool             `json:"validator_ready"`
-	StartTime      time.Time         `json:"start_time"`
-	Uptime         time.Duration     `json:"uptime"`
+	ForwardSync    ForwardSyncStatus  `json:"forward_sync"`
+	BackwardSync   BackwardSyncStatus `json:"backward_sync"`
+	ValidatorReady bool               `json:"validator_ready"`
+	StartTime      time.Time          `json:"start_time"`
+	Uptime         time.Duration      `json:"uptime"`
 }
 
 // ForwardSyncStatus tracks forward synchronization progress
@@ -60,38 +60,38 @@ type BackwardSyncStatus struct {
 
 // PeerInfo represents information about a P2P peer
 type PeerInfo struct {
-	ID             string       `json:"id"`
-	Address        string       `json:"address"`
-	Capabilities   PeerCaps     `json:"capabilities"`
-	Reputation     float64      `json:"reputation"`
-	Connected      bool         `json:"connected"`
-	LastSeen       time.Time    `json:"last_seen"`
+	ID           string    `json:"id"`
+	Address      string    `json:"address"`
+	Capabilities PeerCaps  `json:"capabilities"`
+	Reputation   float64   `json:"reputation"`
+	Connected    bool      `json:"connected"`
+	LastSeen     time.Time `json:"last_seen"`
 }
 
 // PeerCaps represents peer capabilities
 type PeerCaps struct {
-	HistoricalData bool       `json:"historical_data"`
-	FullNode       bool       `json:"full_node"`
-	ArchiveNode    bool       `json:"archive_node"`
-	BlockRange     BlockRange `json:"block_range"`
-	ProtocolVersion string    `json:"protocol_version"`
+	HistoricalData  bool       `json:"historical_data"`
+	FullNode        bool       `json:"full_node"`
+	ArchiveNode     bool       `json:"archive_node"`
+	BlockRange      BlockRange `json:"block_range"`
+	ProtocolVersion string     `json:"protocol_version"`
 }
 
 // Header represents a block header
 type Header struct {
-	Number      uint64      `json:"number"`
-	Hash        common.Hash `json:"hash"`
-	ParentHash  common.Hash `json:"parent_hash"`
-	Coinbase    common.Address `json:"coinbase"`    // Miner/validator address
-	StateRoot   common.Hash `json:"state_root"`
-	TxHash      common.Hash `json:"tx_hash"`       // Transaction root hash
-	ReceiptHash common.Hash `json:"receipt_hash"`  // Receipt root hash
-	GasLimit    uint64      `json:"gas_limit"`
-	GasUsed     uint64      `json:"gas_used"`
-	Timestamp   uint64      `json:"timestamp"`
-	ExtraData   []byte      `json:"extra_data"`
-	MixDigest   common.Hash `json:"mix_digest"`
-	Nonce       uint64      `json:"nonce"`
+	Number      uint64         `json:"number"`
+	Hash        common.Hash    `json:"hash"`
+	ParentHash  common.Hash    `json:"parent_hash"`
+	Coinbase    common.Address `json:"coinbase"` // Miner/validator address
+	StateRoot   common.Hash    `json:"state_root"`
+	TxHash      common.Hash    `json:"tx_hash"`      // Transaction root hash
+	ReceiptHash common.Hash    `json:"receipt_hash"` // Receipt root hash
+	GasLimit    uint64         `json:"gas_limit"`
+	GasUsed     uint64         `json:"gas_used"`
+	Timestamp   uint64         `json:"timestamp"`
+	ExtraData   []byte         `json:"extra_data"`
+	MixDigest   common.Hash    `json:"mix_digest"`
+	Nonce       uint64         `json:"nonce"`
 }
 
 // Transaction represents a blockchain transaction
@@ -121,21 +121,21 @@ var EmptyRootHash = common.HexToHash("0x56e81f171bcc55a6ff8345e692c0f86e5b47e18b
 
 // Validator represents a blockchain validator
 type Validator struct {
-	ID      string      `json:"id"`
+	ID      string         `json:"id"`
 	Address common.Address `json:"address"`
-	PubKey  []byte      `json:"pubkey"`
-	Stake   *big.Int    `json:"stake"`
-	Active  bool        `json:"active"`
+	PubKey  []byte         `json:"pubkey"`
+	Stake   *big.Int       `json:"stake"`
+	Active  bool           `json:"active"`
 }
 
 // ChainConfig represents blockchain-specific configuration
 type ChainConfig struct {
-	Name              string `json:"name"`
-	ChainID           *big.Int `json:"chain_id"`
-	CheckpointSource  string `json:"checkpoint_source"`
+	Name               string         `json:"name"`
+	ChainID            *big.Int       `json:"chain_id"`
+	CheckpointSource   string         `json:"checkpoint_source"`
 	CheckpointContract common.Address `json:"checkpoint_contract,omitempty"`
-	ValidatorSetSize  int    `json:"validator_set_size"`
-	BlockTime         uint64 `json:"block_time"` // seconds
+	ValidatorSetSize   int            `json:"validator_set_size"`
+	BlockTime          uint64         `json:"block_time"` // seconds
 }
 
 // GapInfo represents missing block ranges

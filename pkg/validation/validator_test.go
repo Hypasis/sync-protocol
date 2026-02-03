@@ -73,7 +73,7 @@ func TestPolygonValidator_ValidateBlockHeader(t *testing.T) {
 	// Create a valid parent and child
 	parent := makeTestHeader(100, common.Hash{})
 	child := makeTestHeader(101, parent.Hash)
-	child.Timestamp = parent.Timestamp + 2 // 2 seconds later
+	child.Timestamp = parent.Timestamp + 2    // 2 seconds later
 	child.Hash = computeTestHeaderHash(child) // Recompute hash after timestamp change
 
 	// Test valid header
@@ -118,7 +118,7 @@ func TestPolygonValidator_InvalidTimestamp(t *testing.T) {
 
 	parent := makeTestHeader(100, common.Hash{})
 	child := makeTestHeader(101, parent.Hash)
-	child.Timestamp = parent.Timestamp - 1 // Timestamp in the past
+	child.Timestamp = parent.Timestamp - 1    // Timestamp in the past
 	child.Hash = computeTestHeaderHash(child) // Recompute hash after timestamp change
 
 	err := validator.ValidateBlockHeader(ctx, child, parent)
@@ -183,10 +183,10 @@ func TestPolygonValidator_GasLimitChange(t *testing.T) {
 		gasLimit uint64
 		wantErr  bool
 	}{
-		{"Small increase", 8007812, false},  // Within 1/1024 limit
-		{"Small decrease", 7992188, false},  // Within 1/1024 limit
-		{"Large increase", 9000000, true},   // Exceeds 1/1024 limit
-		{"Large decrease", 7000000, true},   // Exceeds 1/1024 limit
+		{"Small increase", 8007812, false}, // Within 1/1024 limit
+		{"Small decrease", 7992188, false}, // Within 1/1024 limit
+		{"Large increase", 9000000, true},  // Exceeds 1/1024 limit
+		{"Large decrease", 7000000, true},  // Exceeds 1/1024 limit
 	}
 
 	for _, tt := range tests {
@@ -255,9 +255,9 @@ func TestPolygonValidator_InvalidTransaction(t *testing.T) {
 	validator := NewPolygonValidator(DefaultPolygonConfig())
 
 	tests := []struct {
-		name    string
+		name     string
 		modifyTx func(*types.Transaction)
-		wantErr bool
+		wantErr  bool
 	}{
 		{
 			name: "Zero gas",
@@ -312,10 +312,10 @@ func TestPolygonValidator_ValidateExtraData(t *testing.T) {
 	validator := NewPolygonValidator(DefaultPolygonConfig())
 
 	tests := []struct {
-		name         string
-		extraData    []byte
-		isSprintEnd  bool
-		wantErr      bool
+		name        string
+		extraData   []byte
+		isSprintEnd bool
+		wantErr     bool
 	}{
 		{
 			name:        "Valid vanity",
@@ -414,8 +414,8 @@ func TestBorConsensusRules(t *testing.T) {
 	rules := NewBorConsensusRules(PolygonMainnetConfig)
 
 	tests := []struct {
-		name        string
-		blockNumber uint64
+		name          string
+		blockNumber   uint64
 		wantSprintEnd bool
 	}{
 		{"Sprint end", 16, true},

@@ -6,6 +6,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/hypasis/sync-protocol/internal/types"
 )
 
 // Monitor tracks health of the sync service
@@ -28,12 +30,12 @@ type MonitorConfig struct {
 
 // HealthStatus represents the overall health status
 type HealthStatus struct {
-	Healthy      bool                       `json:"healthy"`
-	LastCheck    time.Time                  `json:"last_check"`
-	Uptime       time.Duration              `json:"uptime"`
-	StartTime    time.Time                  `json:"start_time"`
-	CheckResults map[string]*CheckResult    `json:"check_results"`
-	Metrics      map[string]interface{}     `json:"metrics"`
+	Healthy      bool                    `json:"healthy"`
+	LastCheck    time.Time               `json:"last_check"`
+	Uptime       time.Duration           `json:"uptime"`
+	StartTime    time.Time               `json:"start_time"`
+	CheckResults map[string]*CheckResult `json:"check_results"`
+	Metrics      map[string]interface{}  `json:"metrics"`
 }
 
 // CheckResult represents the result of a single health check
@@ -282,7 +284,9 @@ type CacheHealthCheck struct {
 	critical bool
 }
 
-func NewCacheHealthCheck(cache interface{ HealthCheck(ctx context.Context) error }) *CacheHealthCheck {
+func NewCacheHealthCheck(cache interface {
+	HealthCheck(ctx context.Context) error
+}) *CacheHealthCheck {
 	return &CacheHealthCheck{cache: cache, critical: false} // Non-critical
 }
 
@@ -301,12 +305,12 @@ func (c *CacheHealthCheck) Check(ctx context.Context) error {
 // SyncHealthCheck checks if sync is progressing
 type SyncHealthCheck struct {
 	coordinator interface {
-		GetStatus() map[string]interface{}
+		GetStatus() types.SyncStatus
 	}
 	critical bool
 }
 
-func NewSyncHealthCheck(coordinator interface{ GetStatus() map[string]interface{} }) *SyncHealthCheck {
+func NewSyncHealthCheck(coordinator interface{ GetStatus() types.SyncStatus }) *SyncHealthCheck {
 	return &SyncHealthCheck{coordinator: coordinator, critical: true}
 }
 
@@ -322,20 +326,13 @@ func (c *SyncHealthCheck) Check(ctx context.Context) error {
 	status := c.coordinator.GetStatus()
 
 	// Check if validator ready
-	validatorReady, ok := status["validator_ready"].(bool)
-	if !ok || !validatorReady {
+	if !status.ValidatorReady {
 		// Not critical if still syncing
 		return nil
 	}
 
 	// Check forward sync
-	forwardSync, ok := status["forward_sync"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("forward sync status unavailable")
-	}
-
-	blocksPerSec, _ := forwardSync["blocks_per_sec"].(float64)
-	if blocksPerSec == 0 {
+	if status.ForwardSync.BlocksPerSec == 0 {
 		return fmt.Errorf("forward sync appears stalled")
 	}
 

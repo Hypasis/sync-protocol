@@ -53,15 +53,15 @@ func NewPebbleStorage(dataDir string, opts *PebbleOptions) (*PebbleStorage, erro
 
 	// Configure PebbleDB
 	dbOpts := &pebble.Options{
-		Cache:                       pebble.NewCache(opts.CacheSize),
-		MemTableSize:                uint64(opts.WriteBufferSize),
-		MaxOpenFiles:                opts.MaxOpenFiles,
-		DisableWAL:                  false, // Enable WAL for durability
-		BytesPerSync:                1 << 20, // 1MB
-		L0CompactionThreshold:       2,
-		L0StopWritesThreshold:       12,
-		LBaseMaxBytes:               64 << 20, // 64MB
-		MaxConcurrentCompactions:    func() int { return 4 },
+		Cache:                    pebble.NewCache(opts.CacheSize),
+		MemTableSize:             uint64(opts.WriteBufferSize),
+		MaxOpenFiles:             opts.MaxOpenFiles,
+		DisableWAL:               false,   // Enable WAL for durability
+		BytesPerSync:             1 << 20, // 1MB
+		L0CompactionThreshold:    2,
+		L0StopWritesThreshold:    12,
+		LBaseMaxBytes:            64 << 20, // 64MB
+		MaxConcurrentCompactions: func() int { return 4 },
 		Merger: &pebble.Merger{
 			Name: "noop",
 		},

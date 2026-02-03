@@ -16,8 +16,8 @@ import (
 
 // TLSConfig holds TLS configuration
 type TLSConfig struct {
-	CertFile string
-	KeyFile  string
+	CertFile   string
+	KeyFile    string
 	MinVersion uint16 // tls.VersionTLS12 or tls.VersionTLS13
 }
 

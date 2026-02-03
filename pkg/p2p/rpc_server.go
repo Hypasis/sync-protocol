@@ -11,18 +11,18 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/hypasis/sync-protocol/pkg/storage"
 	internalTypes "github.com/hypasis/sync-protocol/internal/types"
+	"github.com/hypasis/sync-protocol/pkg/storage"
 )
 
 // RPCServer serves blocks to Bor clients via JSON-RPC
 type RPCServer struct {
-	storage     storage.Storage
-	fetcher     *BlockFetcher
-	server      *rpc.Server
-	httpServer  *http.Server
-	listenAddr  string
-	chainID     *big.Int
+	storage    storage.Storage
+	fetcher    *BlockFetcher
+	server     *rpc.Server
+	httpServer *http.Server
+	listenAddr string
+	chainID    *big.Int
 }
 
 // RPCConfig configures the RPC server

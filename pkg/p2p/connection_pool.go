@@ -156,17 +156,17 @@ func (p *ConnectionPool) GetMetrics() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"max_connections":       p.maxConnections,
-		"active_connections":    p.activeConns.Load(),
-		"waiting_connections":   p.waitingConns.Load(),
-		"total_connections":     p.metrics.TotalConnections.Load(),
-		"rejected_connections":  p.metrics.RejectedConnections.Load(),
-		"peak_connections":      p.metrics.PeakConnections.Load(),
-		"total_requests":        p.metrics.TotalRequests.Load(),
-		"requests_per_second":   p.metrics.RequestsPerSecond.Load(),
-		"avg_wait_time_ms":      p.metrics.AvgWaitTime.Load(),
-		"active_clients":        activeConns,
-		"utilization_percent":   float64(p.activeConns.Load()) / float64(p.maxConnections) * 100,
+		"max_connections":      p.maxConnections,
+		"active_connections":   p.activeConns.Load(),
+		"waiting_connections":  p.waitingConns.Load(),
+		"total_connections":    p.metrics.TotalConnections.Load(),
+		"rejected_connections": p.metrics.RejectedConnections.Load(),
+		"peak_connections":     p.metrics.PeakConnections.Load(),
+		"total_requests":       p.metrics.TotalRequests.Load(),
+		"requests_per_second":  p.metrics.RequestsPerSecond.Load(),
+		"avg_wait_time_ms":     p.metrics.AvgWaitTime.Load(),
+		"active_clients":       activeConns,
+		"utilization_percent":  float64(p.activeConns.Load()) / float64(p.maxConnections) * 100,
 	}
 }
 

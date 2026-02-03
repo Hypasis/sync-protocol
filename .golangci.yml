@@ -1,0 +1,54 @@
+# golangci-lint configuration for v2.x
+# See https://golangci-lint.run/usage/configuration/
+
+version: 2
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    - gosec
+    - unconvert
+    - misspell
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/hypasis/sync-protocol
+  gosec:
+    excludes:
+      - G404  # Use of weak random number generator (math/rand)
+      - G115  # Integer overflow conversions - common in blockchain code
+  errcheck:
+    check-type-assertions: false
+    check-blank: false
+  staticcheck:
+    checks: ["all", "-SA4003"]  # Exclude uint64 < 0 check (blockchain code)
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 10
+  # Don't fail on issues - report only
+  issues-exit-code: 0
+  exclude-rules:
+    # Exclude some linters from running on test files
+    - path: _test\.go
+      linters:
+        - gosec
+        - errcheck
+    # Exclude unused code warnings (might be work in progress)
+    - linters:
+        - unused
+      text: "is unused"

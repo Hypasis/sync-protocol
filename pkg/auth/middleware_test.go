@@ -225,28 +225,28 @@ func TestPerIPRateLimiter(t *testing.T) {
 
 func TestCORSMiddleware(t *testing.T) {
 	tests := []struct {
-		name            string
-		allowedOrigins  []string
-		requestOrigin   string
-		expectAllowed   bool
+		name           string
+		allowedOrigins []string
+		requestOrigin  string
+		expectAllowed  bool
 	}{
 		{
-			name:            "Allow all origins",
-			allowedOrigins:  []string{"*"},
-			requestOrigin:   "https://example.com",
-			expectAllowed:   true,
+			name:           "Allow all origins",
+			allowedOrigins: []string{"*"},
+			requestOrigin:  "https://example.com",
+			expectAllowed:  true,
 		},
 		{
-			name:            "Specific origin allowed",
-			allowedOrigins:  []string{"https://example.com"},
-			requestOrigin:   "https://example.com",
-			expectAllowed:   true,
+			name:           "Specific origin allowed",
+			allowedOrigins: []string{"https://example.com"},
+			requestOrigin:  "https://example.com",
+			expectAllowed:  true,
 		},
 		{
-			name:            "Origin not allowed",
-			allowedOrigins:  []string{"https://example.com"},
-			requestOrigin:   "https://evil.com",
-			expectAllowed:   false,
+			name:           "Origin not allowed",
+			allowedOrigins: []string{"https://example.com"},
+			requestOrigin:  "https://evil.com",
+			expectAllowed:  false,
 		},
 	}
 

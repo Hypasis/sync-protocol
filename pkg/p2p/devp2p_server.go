@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/ethereum/go-ethereum/p2p/enr"
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/hypasis/sync-protocol/pkg/storage"
 )
@@ -33,15 +34,15 @@ type DevP2PServer struct {
 
 // DevP2PConfig configures the DevP2P server
 type DevP2PConfig struct {
-	ListenAddr   string   // Listen address (e.g., "0.0.0.0:30303")
-	ExternalIP   string   // External IP for enode URL (auto-detect if empty)
-	MaxPeers     int      // Maximum number of connected peers
-	NodeKey      string   // Path to node key file (generated if empty)
-	NetworkID    uint64   // Network ID (137 for Polygon mainnet)
-	Name         string   // Node name
-	Bootnodes    []string // Bootstrap nodes (for connecting to other Hypasis instances)
-	StaticPeers  []string // Static peers (other Hypasis instances in cluster)
-	EnableNAT    bool     // Enable NAT traversal
+	ListenAddr  string   // Listen address (e.g., "0.0.0.0:30303")
+	ExternalIP  string   // External IP for enode URL (auto-detect if empty)
+	MaxPeers    int      // Maximum number of connected peers
+	NodeKey     string   // Path to node key file (generated if empty)
+	NetworkID   uint64   // Network ID (137 for Polygon mainnet)
+	Name        string   // Node name
+	Bootnodes   []string // Bootstrap nodes (for connecting to other Hypasis instances)
+	StaticPeers []string // Static peers (other Hypasis instances in cluster)
+	EnableNAT   bool     // Enable NAT traversal
 }
 
 // peerConnection represents a connected peer

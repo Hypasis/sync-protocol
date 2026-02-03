@@ -34,9 +34,9 @@ type CheckpointConfig struct {
 	Timeout  time.Duration `yaml:"timeout"`
 
 	// L1 Connection (for ethereum-l1 source)
-	L1RPCURL     string `yaml:"l1_rpc_url"`      // Ethereum L1 RPC URL (Infura, Alchemy, etc.)
-	L1ChainID    int64  `yaml:"l1_chain_id"`     // 1 for mainnet, 5 for Goerli, 11155111 for Sepolia
-	ValidatorRPC string `yaml:"validator_rpc"`   // Heimdall API for validator set (optional)
+	L1RPCURL     string `yaml:"l1_rpc_url"`    // Ethereum L1 RPC URL (Infura, Alchemy, etc.)
+	L1ChainID    int64  `yaml:"l1_chain_id"`   // 1 for mainnet, 5 for Goerli, 11155111 for Sepolia
+	ValidatorRPC string `yaml:"validator_rpc"` // Heimdall API for validator set (optional)
 }
 
 // SyncConfig contains synchronization settings
@@ -65,25 +65,25 @@ type BackwardSyncConfig struct {
 // StorageConfig contains storage settings
 type StorageConfig struct {
 	DataDir         string `yaml:"data_dir"`
-	CacheSize       string `yaml:"cache_size"`          // e.g., "2GB" (for PebbleDB cache)
-	WriteBufferSize string `yaml:"write_buffer_size"`   // e.g., "256MB" (for PebbleDB write buffer)
-	MaxOpenFiles    int    `yaml:"max_open_files"`      // Max open file descriptors (default: 1024)
-	HistoricalDepth string `yaml:"historical_depth"`    // full, 1year, 90days, minimal
-	Engine          string `yaml:"engine"`              // memory, pebble, leveldb, badger
+	CacheSize       string `yaml:"cache_size"`        // e.g., "2GB" (for PebbleDB cache)
+	WriteBufferSize string `yaml:"write_buffer_size"` // e.g., "256MB" (for PebbleDB write buffer)
+	MaxOpenFiles    int    `yaml:"max_open_files"`    // Max open file descriptors (default: 1024)
+	HistoricalDepth string `yaml:"historical_depth"`  // full, 1year, 90days, minimal
+	Engine          string `yaml:"engine"`            // memory, pebble, leveldb, badger
 }
 
 // P2PConfig contains P2P networking settings
 type P2PConfig struct {
-	Mode         string        `yaml:"mode"`          // "rpc-server" or "devp2p"
-	Listen       string        `yaml:"listen"`        // Legacy devp2p listen address
-	RPCListen    string        `yaml:"rpc_listen"`    // RPC server listen address (e.g., "0.0.0.0:8545")
-	UpstreamRPCs []string      `yaml:"upstream_rpcs"` // Upstream RPC endpoints to fetch blocks
-	RPCTimeout   time.Duration `yaml:"rpc_timeout"`   // RPC request timeout
-	RPCMaxRetries int          `yaml:"rpc_max_retries"` // Max retries for RPC requests
-	Bootnodes    []string      `yaml:"bootnodes"`     // Legacy bootnodes
-	MaxPeers     int           `yaml:"max_peers"`     // Legacy max peers
-	StaticPeers  []string      `yaml:"static_peers"`  // Legacy static peers
-	NAT          bool          `yaml:"nat"`           // Legacy NAT
+	Mode          string        `yaml:"mode"`            // "rpc-server" or "devp2p"
+	Listen        string        `yaml:"listen"`          // Legacy devp2p listen address
+	RPCListen     string        `yaml:"rpc_listen"`      // RPC server listen address (e.g., "0.0.0.0:8545")
+	UpstreamRPCs  []string      `yaml:"upstream_rpcs"`   // Upstream RPC endpoints to fetch blocks
+	RPCTimeout    time.Duration `yaml:"rpc_timeout"`     // RPC request timeout
+	RPCMaxRetries int           `yaml:"rpc_max_retries"` // Max retries for RPC requests
+	Bootnodes     []string      `yaml:"bootnodes"`       // Legacy bootnodes
+	MaxPeers      int           `yaml:"max_peers"`       // Legacy max peers
+	StaticPeers   []string      `yaml:"static_peers"`    // Legacy static peers
+	NAT           bool          `yaml:"nat"`             // Legacy NAT
 }
 
 // APIConfig contains API server settings
@@ -94,13 +94,13 @@ type APIConfig struct {
 
 // RESTConfig contains REST API settings
 type RESTConfig struct {
-	Enabled    bool     `yaml:"enabled"`
-	Listen     string   `yaml:"listen"`
-	CORS       bool     `yaml:"cors"`
-	CORSOrigins []string `yaml:"cors_origins"` // Allowed CORS origins
-	RateLimit  int      `yaml:"rate_limit"`   // Requests per second
-	TLS        TLSConfig `yaml:"tls"`
-	Auth       AuthConfig `yaml:"auth"`
+	Enabled     bool       `yaml:"enabled"`
+	Listen      string     `yaml:"listen"`
+	CORS        bool       `yaml:"cors"`
+	CORSOrigins []string   `yaml:"cors_origins"` // Allowed CORS origins
+	RateLimit   int        `yaml:"rate_limit"`   // Requests per second
+	TLS         TLSConfig  `yaml:"tls"`
+	Auth        AuthConfig `yaml:"auth"`
 }
 
 // TLSConfig contains TLS settings

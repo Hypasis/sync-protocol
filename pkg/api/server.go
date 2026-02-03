@@ -34,7 +34,7 @@ func NewServer(
 	checkpointMgr *checkpoint.Manager,
 ) *Server {
 	return &Server{
-		config:     cfg,
+		config:      cfg,
 		coordinator: coordinator,
 		storage:     storage,
 		checkpoint:  checkpointMgr,
