@@ -47,9 +47,12 @@ jobs:
 
       - name: Run gofmt
         run: |
-          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-            echo "The following files are not formatted:"
-            gofmt -s -l .
+          file_count=$(gofmt -s -l . | wc -l)
+          if [ "$file_count" -gt 0 ]; then
+            echo "Found $file_count files that need formatting (non-blocking)"
+            echo "Run 'gofmt -s -w .' locally to fix"
+          else
+            echo "All files are properly formatted"
           fi
         continue-on-error: true
 
@@ -61,7 +64,13 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
 
       - name: Run golangci-lint
-        run: golangci-lint run --config .golangci.yml --timeout 5m --issues-exit-code=0
+        run: |
+          golangci-lint run --config .golangci.yml --timeout 5m --issues-exit-code=0 --out-format=line-number > /tmp/lint-results.txt 2>&1 || true
+          issue_count=$(wc -l < /tmp/lint-results.txt)
+          echo "Found $issue_count linting issues (non-blocking)"
+          if [ $issue_count -gt 0 ]; then
+            echo "Run 'golangci-lint run' locally to see details"
+          fi
         continue-on-error: true
 
   # Build and test
