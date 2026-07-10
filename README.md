@@ -4,7 +4,16 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.21-blue.svg)](https://golang.org/)
-[![Status](https://img.shields.io/badge/status-production--ready-green.svg)]()
+[![Status](https://img.shields.io/badge/status-alpha-orange.svg)]()
+
+> **Implementation status (2026-07-11) — read this first.**
+> This is an **alpha / proof of concept**, not production software. What is real and verified today:
+> - ✅ Builds and runs (`make build` → `./hypasis-sync`).
+> - ✅ **Real Polygon checkpoint verification** — reads the actual RootChain contract on Ethereum L1 (mainnet via [config.mainnet.yaml](config.mainnet.yaml), Amoy testnet via [config.amoy.yaml](config.amoy.yaml)).
+> - ✅ Forward/backward sync engines that fetch blocks over upstream JSON-RPC into PebbleDB with gap tracking.
+> - ✅ REST API + Prometheus metrics, with **JWT auth, RBAC, per-IP rate limiting, config-aware CORS, and in-process TLS** wired in.
+>
+> What is **not** real yet (scaffolding or planned): the DevP2P bootnode is not wire-compatible with Bor/geth; the Redis cache, cluster coordinator, and health monitor are not wired into the runtime; per-validator checkpoint signature verification (the L1 read is trusted via Ethereum consensus, not re-derived from validator sigs); Kubernetes/Terraform/Grafana. Sections below marked _(planned)_ describe the target design, not the current build.
 
 ## Overview
 
@@ -100,9 +109,19 @@ See [NODE_OPERATOR_GUIDE.md](NODE_OPERATOR_GUIDE.md) for complete setup instruct
 #### Local Development
 
 ```bash
-# Build and run
+# Build
 make build
-./hypasis-sync --config=config.example.yaml
+
+# Verify real Polygon checkpoints against Ethereum L1 (uses public RPCs):
+./hypasis-sync --config=config.mainnet.yaml     # Polygon mainnet -> Ethereum mainnet RootChain
+./hypasis-sync --config=config.amoy.yaml        # Polygon Amoy -> Sepolia RootChain
+
+# Then query the live, L1-anchored checkpoint:
+curl -s http://localhost:8080/api/v1/checkpoints | jq .latest
+# => real Polygon block number finalized on Ethereum, its checkpoint root, and proposer
+
+# Or run with built-in mock data (no network needed):
+./hypasis-sync
 ```
 
 #### Cloud Deployment (Production)
@@ -296,26 +315,25 @@ curl http://localhost:8080/health
 
 ## Roadmap
 
-### Completed (Production Ready)
+### Implemented and verified
 - [x] Core protocol design and architecture
-- [x] Checkpoint manager with L1 integration
-- [x] Forward/backward sync engines
+- [x] Checkpoint manager reading the real Polygon RootChain contract on Ethereum L1
+- [x] Forward/backward sync engines (fetch over upstream JSON-RPC)
 - [x] PebbleDB storage with gap tracking
-- [x] P2P RPC proxy implementation
-- [x] Block validation (4 levels: none, header, light, full)
-- [x] TLS, JWT authentication, RBAC security
+- [x] RPC proxy/server for block queries
+- [x] Block validation levels (none, header, light, full)
+- [x] TLS, JWT authentication, RBAC, per-IP rate limiting (wired into the API server)
 - [x] REST API and Prometheus metrics
-- [x] Polygon PoS integration
-- [x] ECDSA signature verification
-- [x] Rate limiting (per-operator + global)
-- [x] **DevP2P bootnode server**
-- [x] **Connection pooling (1000+ operators)**
-- [x] **Redis distributed cache**
-- [x] **Health monitoring and auto-failover**
-- [x] **Cluster coordination (multi-instance mesh)**
-- [x] **Docker and Docker Compose deployment**
-- [x] **Nginx load balancer configuration**
-- [x] **Cloud deployment documentation**
+- [x] Runnable node entrypoint + Docker build
+
+### Scaffolding present but NOT wired into the runtime
+- [ ] DevP2P bootnode server _(not wire-compatible with Bor/geth yet)_
+- [ ] Connection pooling _(implemented, unused)_
+- [ ] Redis distributed cache _(implemented, unused)_
+- [ ] Health monitoring / auto-failover _(implemented, unused)_
+- [ ] Cluster coordination / multi-instance mesh _(implemented, unused)_
+- [ ] Per-validator ECDSA checkpoint-signature threshold _(code exists; L1 reads are currently trusted via Ethereum consensus)_
+- [ ] Nginx / Docker Compose cloud topology _(config present, unverified end-to-end)_
 
 ### In Progress
 - [ ] Kubernetes Helm charts

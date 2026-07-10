@@ -1,6 +1,6 @@
-# Binaries
-hypasis-sync
-hypasis-sync-*
+# Binaries (anchored to repo root so they don't match the cmd/hypasis-sync/ source dir)
+/hypasis-sync
+/hypasis-sync-*
 *.exe
 *.dll
 *.so

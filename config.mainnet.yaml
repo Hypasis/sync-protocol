@@ -1,0 +1,37 @@
+# Polygon PoS mainnet checkpoint verification against Ethereum L1.
+# Reads the real RootChain (RootChainProxy) contract on Ethereum mainnet.
+chain:
+  name: polygon-pos
+  network: mainnet
+  chain_id: 137
+
+checkpoint:
+  source: ethereum-l1
+  # Polygon RootChainProxy on Ethereum mainnet.
+  contract: "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287"
+  l1_rpc_url: "https://ethereum-rpc.publicnode.com"
+  l1_chain_id: 1
+  timeout: 30s
+
+storage:
+  engine: memory
+  data_dir: ./data
+
+# Disable block sync for a focused checkpoint-read demo (needs a working
+# Polygon RPC to sync actual blocks; enable and set upstream_rpcs to use).
+sync:
+  forward:
+    enabled: false
+  backward:
+    enabled: false
+
+api:
+  rest:
+    enabled: true
+    listen: "0.0.0.0:8080"
+    cors: true
+    cors_origins: ["*"]
+    auth:
+      enabled: false
+  metrics:
+    enabled: false

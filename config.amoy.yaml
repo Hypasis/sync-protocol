@@ -1,0 +1,40 @@
+# Polygon Amoy testnet checkpoint verification against Ethereum Sepolia L1.
+# Reads the real RootChainProxy contract for Amoy, deployed on Sepolia.
+chain:
+  name: polygon-amoy
+  network: testnet
+  chain_id: 80002
+
+checkpoint:
+  source: ethereum-l1
+  # Amoy RootChainProxy on Sepolia (source: maticnetwork/static amoy config).
+  contract: "0xbd07D7E1E93c8d4b2a261327F3C28a8EA7167209"
+  l1_rpc_url: "https://ethereum-sepolia-rpc.publicnode.com"
+  l1_chain_id: 11155111
+  timeout: 30s
+
+storage:
+  engine: memory
+  data_dir: ./data
+
+# Enable to sync real Amoy blocks; set upstream_rpcs to a working Amoy RPC.
+sync:
+  forward:
+    enabled: false
+  backward:
+    enabled: false
+
+p2p:
+  upstream_rpcs:
+    - "https://rpc-amoy.polygon.technology"
+
+api:
+  rest:
+    enabled: true
+    listen: "0.0.0.0:8080"
+    cors: true
+    cors_origins: ["*"]
+    auth:
+      enabled: false
+  metrics:
+    enabled: false

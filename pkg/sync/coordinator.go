@@ -177,16 +177,23 @@ func (c *Coordinator) GetStatus() types.SyncStatus {
 	return status
 }
 
-// IsValidatorReady checks if the node is ready for validator duties
+// IsValidatorReady checks if the node is ready for validator duties.
 func (c *Coordinator) IsValidatorReady() bool {
-	status := c.GetStatus()
+	return validatorReady(c.GetStatus().ForwardSync)
+}
 
-	// Validator is ready when:
-	// 1. Forward sync is caught up (within 10 blocks of target)
-	// 2. Forward sync progress > 99%
-	return status.ForwardSync.Syncing &&
-		(status.ForwardSync.TargetBlock-status.ForwardSync.CurrentBlock) < 10 &&
-		status.ForwardSync.Progress > 99.0
+// validatorReady reports whether the forward-sync state means the node is
+// caught up enough for validator duties. It takes no locks so it can be called
+// while the status lock is already held (see updateStatus).
+//
+// Validator is ready when:
+//  1. Forward sync is active,
+//  2. it is within 10 blocks of the target, and
+//  3. progress is > 99%.
+func validatorReady(fs types.ForwardSyncStatus) bool {
+	return fs.Syncing &&
+		(fs.TargetBlock-fs.CurrentBlock) < 10 &&
+		fs.Progress > 99.0
 }
 
 // PauseBackwardSync pauses backward synchronization
@@ -237,6 +244,8 @@ func (c *Coordinator) updateStatus() {
 		c.status.BackwardSync = c.backwardSync.GetStatus()
 	}
 
-	// Update validator ready status
-	c.status.ValidatorReady = c.IsValidatorReady()
+	// Update validator ready status. Compute directly from the fields we just
+	// set — do NOT call IsValidatorReady()/GetStatus() here, as they take the
+	// status lock we already hold (RWMutex is not reentrant → deadlock).
+	c.status.ValidatorReady = validatorReady(c.status.ForwardSync)
 }
