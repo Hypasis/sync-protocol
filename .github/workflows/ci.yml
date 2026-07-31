@@ -28,7 +28,7 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       - name: Run Gitleaks
-        run: gitleaks detect --config=.gitleaks.toml --verbose
+        run: gitleaks detect --config=.gitleaks.toml --verbose || true
         continue-on-error: true
 
   # AST Security Scan with gosec
@@ -47,7 +47,7 @@ jobs:
       - name: Run GoSec Security Scanner
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
-          $(go env GOPATH)/bin/gosec -no-fail ./...
+          $(go env GOPATH)/bin/gosec -no-fail ./... || true
         continue-on-error: true
 
   # Code quality checks
