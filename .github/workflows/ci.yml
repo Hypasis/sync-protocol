@@ -31,6 +31,20 @@ jobs:
         run: gitleaks detect --config=.gitleaks.toml --verbose
         continue-on-error: true
 
+  # AST Security Scan with gosec
+  gosec:
+    name: GoSec AST Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run GoSec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt=sarif -out=results.sarif ./...'
+        continue-on-error: true
+
   # Code quality checks
   lint:
     name: Lint and Format Check
