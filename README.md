@@ -148,7 +148,7 @@ bor server \
 ## 📦 Deployment & Production Setup
 
 * **Docker Compose (Quick Deploy)**: See [`docker-compose.cloud.yaml`](file:///Users/sanket/sync-protocol/docker-compose.cloud.yaml) and run `./scripts/deploy-cloud.sh`.
-* **AWS & Kubernetes (EKS)**: Complete production guide in [`CLOUD_DEPLOYMENT.md`](file:///Users/sanket/sync-protocol/CLOUD_DEPLOYMENT.md) and manifests in [`deployments/`](file:///Users/sanket/sync-protocol/deployments).
+* **Multi-Node Cluster Guide**: Complete guide in [`CLOUD_DEPLOYMENT.md`](file:///Users/sanket/sync-protocol/CLOUD_DEPLOYMENT.md) and manifests in [`deployments/`](file:///Users/sanket/sync-protocol/deployments).
 
 ---
 
