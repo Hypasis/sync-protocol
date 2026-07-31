@@ -42,3 +42,10 @@ vendor/
 # Build artifacts
 dist/
 build/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!terraform.tfvars.example
