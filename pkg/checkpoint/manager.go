@@ -219,46 +219,16 @@ func (v *DefaultValidator) Verify(ctx context.Context, cp *types.Checkpoint) err
 		return fmt.Errorf("failed to get validator set: %w", err)
 	}
 
-	// Create signature verifier
-	sigVerifier := NewSignatureVerifier(cp.ChainID)
-
-	// Create validator map for easy lookup
-	validatorMap := make(map[string]*types.Validator)
-	totalStake := big.NewInt(0)
+	// Build validator pointer slice
+	validatorPtrs := make([]*types.Validator, len(validators))
 	for i := range validators {
-		validatorMap[validators[i].ID] = &validators[i]
-		totalStake.Add(totalStake, validators[i].Stake)
+		validatorPtrs[i] = &validators[i]
 	}
 
-	// Verify signatures
-	signedStake := big.NewInt(0)
-
-	for _, sig := range cp.ValidatorSigs {
-		validator, ok := validatorMap[sig.ValidatorID]
-		if !ok {
-			// Unknown validator, skip
-			continue
-		}
-
-		// Verify the signature using cryptographic verification
-		err := sigVerifier.VerifyCheckpointSignature(cp, validator, sig.Signature)
-		if err != nil {
-			// Invalid signature, log but continue checking others
-			fmt.Printf("Warning: Invalid signature from validator %s: %v\n", sig.ValidatorID, err)
-			continue
-		}
-
-		// Valid signature, add stake
-		signedStake.Add(signedStake, validator.Stake)
-	}
-
-	// Check threshold (2/3+ by stake)
-	threshold := new(big.Int).Mul(totalStake, big.NewInt(66))
-	threshold.Div(threshold, big.NewInt(100))
-
-	if signedStake.Cmp(threshold) < 0 {
-		return fmt.Errorf("insufficient signatures: got %s stake, need %s (66%% of %s total)",
-			signedStake.String(), threshold.String(), totalStake.String())
+	// Create signature verifier and verify signatures against stake threshold
+	sigVerifier := NewSignatureVerifier(cp.ChainID)
+	if err := sigVerifier.VerifyCheckpointSignatures(cp, validatorPtrs); err != nil {
+		return fmt.Errorf("checkpoint signature verification failed: %w", err)
 	}
 
 	return nil

@@ -65,24 +65,25 @@ func (v *SignatureVerifier) VerifyCheckpointSignature(
 	signature []byte,
 ) error {
 	// Create the message to be signed
-	// In Polygon, this is typically:
-	// keccak256(abi.encodePacked(blockNumber, blockHash, stateRoot))
 	message := v.createCheckpointMessage(checkpoint)
-
-	// For ECDSA verification, we need the validator's public key
-	// In production, this would be derived from the validator's address
-	// For now, we'll use a simplified verification
-
-	// Hash the message
-	messageHash := crypto.Keccak256Hash(message)
 
 	// Verify signature length
 	if len(signature) != 65 {
 		return fmt.Errorf("invalid signature length: expected 65, got %d", len(signature))
 	}
 
-	// Recover the signer's address from the signature
-	recoveredPub, err := crypto.SigToPub(messageHash.Bytes(), signature)
+	// Make a copy of signature and normalize V byte if standard Ethereum format (27/28)
+	sigCopy := make([]byte, 65)
+	copy(sigCopy, signature)
+	if sigCopy[64] >= 27 {
+		sigCopy[64] -= 27
+	}
+
+	// Hash the message
+	messageHash := crypto.Keccak256Hash(message)
+
+	// Recover the signer's public key from the signature
+	recoveredPub, err := crypto.SigToPub(messageHash.Bytes(), sigCopy)
 	if err != nil {
 		return fmt.Errorf("failed to recover public key: %w", err)
 	}
@@ -117,7 +118,7 @@ func (v *SignatureVerifier) createCheckpointMessage(checkpoint *types.Checkpoint
 	return message
 }
 
-// VerifyCheckpointSignatures verifies all signatures on a checkpoint
+// VerifyCheckpointSignatures verifies all signatures on a checkpoint against a validator set
 func (v *SignatureVerifier) VerifyCheckpointSignatures(
 	checkpoint *types.Checkpoint,
 	validators []*types.Validator,
@@ -126,25 +127,32 @@ func (v *SignatureVerifier) VerifyCheckpointSignatures(
 		return fmt.Errorf("no signatures on checkpoint")
 	}
 
-	// Create a map of validator ID to validator
+	// Compute total active stake across the entire validator set
 	validatorMap := make(map[string]*types.Validator)
+	totalStake := big.NewInt(0)
 	for _, val := range validators {
-		validatorMap[val.ID] = val
+		if val != nil && val.Active {
+			validatorMap[val.ID] = val
+			if val.Stake != nil {
+				totalStake.Add(totalStake, val.Stake)
+			}
+		}
 	}
 
-	// Verify each signature
+	if totalStake.Cmp(big.NewInt(0)) == 0 {
+		return fmt.Errorf("total validator stake is zero")
+	}
+
+	// Verify each signature and accumulate valid signed stake
 	validSignatures := 0
-	totalStake := big.NewInt(0)
 	signedStake := big.NewInt(0)
 
 	for _, sig := range checkpoint.ValidatorSigs {
 		validator, ok := validatorMap[sig.ValidatorID]
 		if !ok {
-			// Unknown validator, skip
+			// Unknown or inactive validator, skip
 			continue
 		}
-
-		totalStake.Add(totalStake, validator.Stake)
 
 		// Verify the signature
 		err := v.VerifyCheckpointSignature(checkpoint, validator, sig.Signature)
@@ -154,15 +162,17 @@ func (v *SignatureVerifier) VerifyCheckpointSignatures(
 		}
 
 		validSignatures++
-		signedStake.Add(signedStake, validator.Stake)
+		if validator.Stake != nil {
+			signedStake.Add(signedStake, validator.Stake)
+		}
 	}
 
-	// Check if we have enough signatures (2/3+ of total stake)
+	// Enforce 2/3+ (66.67%) threshold by stake
 	threshold := new(big.Int).Mul(totalStake, big.NewInt(66))
 	threshold.Div(threshold, big.NewInt(100))
 
 	if signedStake.Cmp(threshold) < 0 {
-		return fmt.Errorf("insufficient stake signed: got %s, need %s (66%% of %s)",
+		return fmt.Errorf("insufficient stake signed: got %s, need %s (66%% of %s total stake)",
 			signedStake.String(), threshold.String(), totalStake.String())
 	}
 
