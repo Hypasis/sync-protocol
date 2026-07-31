@@ -6,14 +6,15 @@
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.21-blue.svg)](https://golang.org/)
 [![Status](https://img.shields.io/badge/status-alpha-orange.svg)]()
 
-> **Implementation status (2026-07-11) — read this first.**
+> **Implementation status (2026-08-01) — read this first.**
 > This is an **alpha / proof of concept**, not production software. What is real and verified today:
 > - ✅ Builds and runs (`make build` → `./hypasis-sync`).
 > - ✅ **Real Polygon checkpoint verification** — reads the actual RootChain contract on Ethereum L1 (mainnet via [config.mainnet.yaml](config.mainnet.yaml), Amoy testnet via [config.amoy.yaml](config.amoy.yaml)).
+> - ✅ **Per-validator ECDSA checkpoint signature verification** & **stake-weighted threshold enforcement** ($\ge 66\%$ total active stake).
 > - ✅ Forward/backward sync engines that fetch blocks over upstream JSON-RPC into PebbleDB with gap tracking.
 > - ✅ REST API + Prometheus metrics, with **JWT auth, RBAC, per-IP rate limiting, config-aware CORS, and in-process TLS** wired in.
 >
-> What is **not** real yet (scaffolding or planned): the DevP2P bootnode is not wire-compatible with Bor/geth; the Redis cache, cluster coordinator, and health monitor are not wired into the runtime; per-validator checkpoint signature verification (the L1 read is trusted via Ethereum consensus, not re-derived from validator sigs); Kubernetes/Terraform/Grafana. Sections below marked _(planned)_ describe the target design, not the current build.
+> What is **not** real yet (scaffolding or planned): the DevP2P bootnode is not wire-compatible with Bor/geth; the Redis cache, cluster coordinator, and health monitor are not wired into the runtime; BLS signature aggregation; Kubernetes/Terraform/Grafana. Sections below marked _(planned)_ describe the target design, not the current build.
 
 ## Overview
 

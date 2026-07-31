@@ -17,7 +17,8 @@
 - [x] Checkpoint manager interface
 - [x] Mock checkpoint source (for testing)
 - [x] Checkpoint validation framework
-- [x] Signature verification structure
+- [x] Cryptographic ECDSA signature verification
+- [x] Stake-weighted validator threshold enforcement (>= 66% stake)
 
 ### Synchronization
 - [x] Sync coordinator
@@ -29,6 +30,7 @@
 ### Storage
 - [x] Storage interface abstraction
 - [x] In-memory storage implementation
+- [x] PebbleDB persistent engine integration
 - [x] Gap-aware tracking system
 - [x] Block range management
 - [x] Interval-based gap detection
@@ -65,10 +67,10 @@
    - [ ] Database migrations
 
 3. **Checkpoint Sources**
-   - [ ] Ethereum L1 contract integration
+   - [x] Ethereum L1 RootChain contract integration
    - [ ] Beacon chain integration
    - [ ] Heimdall API integration
-   - [ ] Signature verification (BLS/ECDSA)
+   - [x] ECDSA signature verification (BLS aggregation planned)
 
 4. **Block Validation**
    - [ ] Header validation
