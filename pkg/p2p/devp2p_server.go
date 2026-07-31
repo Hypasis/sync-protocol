@@ -342,72 +342,152 @@ func (s *DevP2PServer) handleMessage(peer *p2p.Peer, rw p2p.MsgReadWriter, msg p
 	return nil
 }
 
-// handleGetBlockHeaders handles block header requests
+// handleGetBlockHeaders handles block header requests (eth/66 format)
 func (s *DevP2PServer) handleGetBlockHeaders(rw p2p.MsgReadWriter, msg p2p.Msg) error {
-	// Decode request
+	// Eth/66 wraps requests as [reqID, [origin, amount, skip, reverse]]
 	var req struct {
-		Origin  uint64
+		ReqID  uint64
+		Origin struct {
+			Hash   [32]byte
+			Number uint64
+		}
 		Amount  uint64
 		Skip    uint64
 		Reverse bool
 	}
-	if err := msg.Decode(&req); err != nil {
-		return err
+
+	// First try decoding eth/66 format
+	var reqID uint64
+	var originNum uint64
+	var amount uint64
+	var skip uint64
+
+	var eth66Req struct {
+		ReqID uint64
+		Data  struct {
+			Origin  uint64
+			Amount  uint64
+			Skip    uint64
+			Reverse bool
+		}
 	}
 
-	// Fetch headers (simplified - real implementation would be more complex)
+	if err := msg.Decode(&eth66Req); err == nil {
+		reqID = eth66Req.ReqID
+		originNum = eth66Req.Data.Origin
+		amount = eth66Req.Data.Amount
+		skip = eth66Req.Data.Skip
+	} else if err := msg.Decode(&req); err == nil {
+		reqID = req.ReqID
+		originNum = req.Origin.Number
+		amount = req.Amount
+		skip = req.Skip
+	} else {
+		// Fallback for simple origin number format
+		var simpleReq struct {
+			Origin  uint64
+			Amount  uint64
+			Skip    uint64
+			Reverse bool
+		}
+		if err := msg.Decode(&simpleReq); err != nil {
+			return err
+		}
+		originNum = simpleReq.Origin
+		amount = simpleReq.Amount
+		skip = simpleReq.Skip
+	}
+
+	if skip == 0 {
+		skip = 1
+	}
+
+	// Fetch headers (capped at 192 headers per eth/66 spec)
 	headers := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	for i := uint64(0); i < req.Amount && i < 192; i++ { // Max 192 headers per response
-		blockNum := req.Origin + i*req.Skip
+	for i := uint64(0); i < amount && i < 192; i++ {
+		blockNum := originNum + i*skip
 		block, err := s.storage.GetBlock(ctx, blockNum)
 		if err != nil {
 			break
 		}
-		headers = append(headers, block.Header)
+		if block != nil && block.Header != nil {
+			headers = append(headers, block.Header)
+		}
 	}
 
-	return p2p.Send(rw, 0x04, headers) // 0x04 = BlockHeaders
+	// Eth/66 response format: [reqID, headers]
+	response := struct {
+		ReqID   uint64
+		Headers []interface{}
+	}{
+		ReqID:   reqID,
+		Headers: headers,
+	}
+
+	return p2p.Send(rw, 0x04, response) // 0x04 = BlockHeaders
 }
 
-// handleGetBlockBodies handles block body requests
+// handleGetBlockBodies handles block body requests (eth/66 format)
 func (s *DevP2PServer) handleGetBlockBodies(rw p2p.MsgReadWriter, msg p2p.Msg) error {
-	// Decode request (list of block hashes)
-	var hashes [][]byte
-	if err := msg.Decode(&hashes); err != nil {
-		return err
+	var reqID uint64
+	var hashes [][32]byte
+
+	var eth66Req struct {
+		ReqID  uint64
+		Hashes [][32]byte
 	}
 
-	// Fetch bodies (simplified)
+	if err := msg.Decode(&eth66Req); err == nil {
+		reqID = eth66Req.ReqID
+		hashes = eth66Req.Hashes
+	} else {
+		var rawHashes [][]byte
+		if err := msg.Decode(&rawHashes); err != nil {
+			return err
+		}
+		for _, h := range rawHashes {
+			if len(h) == 32 {
+				var hash [32]byte
+				copy(hash[:], h)
+				hashes = append(hashes, hash)
+			}
+		}
+	}
+
+	// Fetch bodies
 	bodies := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	for _, hash := range hashes {
-		if len(hash) != 32 {
-			continue
-		}
-		var h [32]byte
-		copy(h[:], hash)
-
-		block, err := s.storage.GetBlockByHash(ctx, h)
-		if err != nil {
+		block, err := s.storage.GetBlockByHash(ctx, hash)
+		if err != nil || block == nil {
 			continue
 		}
 
 		bodies = append(bodies, map[string]interface{}{
 			"transactions": block.Transactions,
-			"uncles":       []interface{}{}, // Polygon doesn't use uncles
+			"uncles":       []interface{}{},
 		})
 
-		if len(bodies) >= 128 { // Max 128 bodies per response
+		if len(bodies) >= 128 { // Max 128 bodies per eth/66 spec
 			break
 		}
 	}
 
-	return p2p.Send(rw, 0x06, bodies) // 0x06 = BlockBodies
+	// Eth/66 response format: [reqID, bodies]
+	response := struct {
+		ReqID  uint64
+		Bodies []interface{}
+	}{
+		ReqID:  reqID,
+		Bodies: bodies,
+	}
+
+	return p2p.Send(rw, 0x06, response) // 0x06 = BlockBodies
 }
 
 // detectExternalIP attempts to detect the external IP address

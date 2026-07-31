@@ -14,13 +14,17 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/hypasis/sync-protocol/internal/types"
 	"github.com/hypasis/sync-protocol/pkg/api"
+	"github.com/hypasis/sync-protocol/pkg/cache"
 	"github.com/hypasis/sync-protocol/pkg/checkpoint"
+	"github.com/hypasis/sync-protocol/pkg/cluster"
 	"github.com/hypasis/sync-protocol/pkg/config"
+	"github.com/hypasis/sync-protocol/pkg/health"
 	"github.com/hypasis/sync-protocol/pkg/p2p"
 	"github.com/hypasis/sync-protocol/pkg/storage"
 	"github.com/hypasis/sync-protocol/pkg/sync"
@@ -97,7 +101,69 @@ func main() {
 	}
 	defer coordinator.Stop()
 
-	// 5. API server (REST + metrics).
+	// 5. Cluster & Redis Distributed Cache (when enabled).
+	if cfg.Cluster.Enabled && cfg.Cluster.RedisURL != "" {
+		redisCache, err := cache.NewRedisCache(&cache.RedisConfig{
+			URL:      cfg.Cluster.RedisURL,
+			Password: cfg.Cluster.RedisPassword,
+			DB:       0,
+			TTL:      24 * time.Hour,
+		})
+		if err != nil {
+			logf("warning: failed to init redis cache: %v", err)
+		} else {
+			logf("redis distributed cache connected: %s", cfg.Cluster.RedisURL)
+			defer redisCache.Close()
+
+			// Cluster Coordinator
+			coordCfg := &cluster.CoordinatorConfig{
+				InstanceID:      cfg.Cloud.InstanceID,
+				Region:          cfg.Cloud.Region,
+				HeartbeatPeriod: 10 * time.Second,
+				PeerTimeout:     30 * time.Second,
+				LeaderElection:  true,
+			}
+			clusterCoord := cluster.NewCoordinator(coordCfg, redisCache)
+			if err := clusterCoord.Start(); err != nil {
+				logf("warning: cluster coordinator start failed: %v", err)
+			} else {
+				logf("cluster coordinator active: instance=%s region=%s", cfg.Cloud.InstanceID, cfg.Cloud.Region)
+				defer clusterCoord.Stop()
+			}
+		}
+	}
+
+	// 6. DevP2P Server (when configured).
+	if cfg.P2P.Mode == "devp2p" {
+		devp2pCfg := &p2p.DevP2PConfig{
+			ListenAddr: cfg.P2P.Listen,
+			MaxPeers:   cfg.P2P.MaxPeers,
+			NetworkID:  uint64(cfg.Chain.ChainID),
+			Name:       "hypasis-node",
+		}
+		p2pServer, err := p2p.NewDevP2PServer(devp2pCfg, store, fetcher)
+		if err != nil {
+			logf("warning: failed to init DevP2P server: %v", err)
+		} else {
+			if err := p2pServer.Start(); err != nil {
+				logf("warning: failed to start DevP2P server: %v", err)
+			} else {
+				logf("DevP2P bootnode active: listen=%s enode=%s", cfg.P2P.Listen, p2pServer.GetEnodeURL())
+				defer p2pServer.Stop()
+			}
+		}
+	}
+
+	// 7. Health Monitor.
+	healthMonitor := health.NewMonitor(&health.MonitorConfig{
+		CheckInterval:    5 * time.Minute,
+		UnhealthyTimeout: 15 * time.Minute,
+		EnableAutoHeal:   true,
+	})
+	healthMonitor.Start()
+	defer healthMonitor.Stop()
+
+	// 8. API server (REST + metrics).
 	apiServer := api.NewServer(&cfg.API, coordinator, store, checkpointMgr)
 	if err := apiServer.Start(context.Background()); err != nil {
 		fatal("start api server: %v", err)

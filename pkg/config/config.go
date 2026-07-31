@@ -17,6 +17,21 @@ type Config struct {
 	P2P        P2PConfig        `yaml:"p2p"`
 	API        APIConfig        `yaml:"api"`
 	Logging    LoggingConfig    `yaml:"logging"`
+	Cloud      CloudConfig      `yaml:"cloud"`
+	Cluster    ClusterConfig    `yaml:"cluster"`
+}
+
+// CloudConfig contains cloud instance settings
+type CloudConfig struct {
+	InstanceID string `yaml:"instance_id"`
+	Region     string `yaml:"region"`
+}
+
+// ClusterConfig contains cluster coordination settings
+type ClusterConfig struct {
+	Enabled       bool   `yaml:"enabled"`
+	RedisURL      string `yaml:"redis_url"`
+	RedisPassword string `yaml:"redis_password"`
 }
 
 // ChainConfig contains blockchain-specific settings
