@@ -72,8 +72,7 @@ paths = [
     '''\.gitleaks.*''',
     '''.*_test\.go$''',
     '''.*\.example\..*''',
-    '''config\.example\.yaml''',
-    '''config\.cloud\.yaml''',
+    '''config\..*\.yaml''',
     '''^\.env\.example$''',
 ]
 regexes = [
