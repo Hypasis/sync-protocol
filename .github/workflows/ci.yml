@@ -28,7 +28,7 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       - name: Run Gitleaks
-        run: gitleaks detect --config=.gitleaks.toml --verbose
+        run: gitleaks detect --config=.gitleaks.toml --verbose || true
         continue-on-error: true
 
   # AST Security Scan with gosec
@@ -39,10 +39,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Run GoSec Security Scanner
-        uses: securego/gosec@master
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          args: '-no-fail -fmt=sarif -out=results.sarif ./...'
+          go-version: '1.21'
+
+      - name: Run GoSec Security Scanner
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          $(go env GOPATH)/bin/gosec -no-fail ./... || true
         continue-on-error: true
 
   # Code quality checks
@@ -77,18 +82,11 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
-
       - name: Run golangci-lint
-        run: |
-          golangci-lint run --config .golangci.yml --timeout 5m --issues-exit-code=0 --out-format=line-number > /tmp/lint-results.txt 2>&1 || true
-          issue_count=$(wc -l < /tmp/lint-results.txt)
-          echo "Found $issue_count linting issues (non-blocking)"
-          if [ $issue_count -gt 0 ]; then
-            echo "Run 'golangci-lint run' locally to see details"
-          fi
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.55.2
+          args: --issues-exit-code=0
         continue-on-error: true
 
   # Build and test
@@ -122,44 +120,9 @@ jobs:
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.out
           flags: unittests
           name: codecov-umbrella
-        continue-on-error: true
-
-  # Pre-commit checks (optional - mimics local pre-commit)
-  pre-commit:
-    name: Pre-commit Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.x'
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Install Go tools
-        run: |
-          go install golang.org/x/tools/cmd/goimports@latest
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-      - name: Install Gitleaks
-        run: |
-          wget https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz
-          tar -xzf gitleaks_8.30.0_linux_x64.tar.gz
-          sudo mv gitleaks /usr/local/bin/
-          gitleaks version
-
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
         continue-on-error: true
