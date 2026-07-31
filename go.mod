@@ -1,6 +1,6 @@
 module github.com/hypasis/sync-protocol
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/cockroachdb/pebble v1.1.5
@@ -9,7 +9,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/mux v1.8.1
 	github.com/prometheus/client_golang v1.17.0
-	golang.org/x/time v0.10.0
+	golang.org/x/time v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
