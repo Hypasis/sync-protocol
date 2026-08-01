@@ -1,0 +1,38 @@
+groups:
+  - name: hypasis_sync_protocol_alerts
+    rules:
+      - alert: HypasisSyncStalled
+        expr: rate(hypasis_sync_block_number{type="forward_tip"}[5m]) == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Hypasis block synchronization stalled"
+          description: "Block tip has not advanced for over 3 minutes. Upstream RPC or node process may be frozen."
+
+      - alert: HypasisL1AnchorLagging
+        expr: (hypasis_sync_block_number{type="forward_tip"} - hypasis_sync_block_number{type="l1_checkpoint"}) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "L1 RootChain checkpoint is lagging behind block tip"
+          description: "Ethereum L1 RootChain checkpoint is over 1,000 blocks behind live forward tip."
+
+      - alert: HypasisZeroP2PPeers
+        expr: hypasis_p2p_active_peers == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hypasis DevP2P server has zero active peers"
+          description: "No Bor node clients are currently connected to the Hypasis DevP2P bootnode."
+
+      - alert: HypasisHighStorageLatency
+        expr: histogram_quantile(0.95, rate(hypasis_storage_latency_seconds_bucket[1m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PebbleDB storage read/write latency is high"
+          description: "PebbleDB 95th percentile latency exceeded 50ms."
