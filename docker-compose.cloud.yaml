@@ -146,8 +146,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./deployments/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./deployments/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./deployments/grafana/hypasis_dashboard.json:/var/lib/grafana/dashboards/hypasis_dashboard.json:ro
+      - ./deployments/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
     networks:
       - hypasis-network
     depends_on:
